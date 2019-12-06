@@ -18,25 +18,22 @@ def count(objects, search, steps=0):
 
     return total
 
-def path(objects, search, stop, steps=0):
-    path = []
-    total = 0
+def find_path(objects, search, stop, path=[]):
+    p = path.copy()
     if search == stop:
-        return steps
+        return p
 
     obj = objects.pop(search, None)
-    path.append(obj)
+    p.append(search)
     if not obj:
-        return 0
-
-    steps += 1
+        return False
 
     for orbit in obj:
-        total += path(objects, orbit, stop, steps)
+        ret = find_path(objects, orbit, stop, p)
+        if ret != False:
+            return ret
 
-    return total
-
-def common(
+    return False
 
 if __name__ == "__main__":
     with open(FILE) as file:
@@ -58,14 +55,12 @@ if __name__ == "__main__":
     total = count(objects.copy(), "COM")
     print("Result 1: {}".format(total))
 
-    path1 = path(objects.copy(), "COM", "YOU") -1
-    print(path1)
-    path2 = path(objects.copy(), "COM", "SAN") -1
-    print(path2)
+    # Plot the path to YOU and SAN
+    path1 = find_path(objects.copy(), "COM", "YOU")
+    path2 = find_path(objects.copy(), "COM", "SAN")
 
-    dif = abs(path1 - path2) + 1
-    print(dif)
-    path1 = (path1-dif) + (path2-dif)
-    print("Result 2: {}".format(path1))
+    # Find the length of the common part
+    common_part = len(list(set(path1) & set(path2)))
+    distance = len(path1) + len(path2) - (2 * common_part)
 
-
+    print("Result 2: {}".format(distance))
