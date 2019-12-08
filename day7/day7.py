@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
-from processor import processor
 import io
-import sys
-from contextlib import redirect_stdout
 import itertools
+from processor import processor
+from contextlib import redirect_stdout
 
 FILE = "example.txt"
-#FILE = "input.txt"
+FILE = "input.txt"
+
 
 def calculate_out(program, setting):
     amp_input = 0
@@ -24,45 +24,51 @@ def calculate_out(program, setting):
 
     return amp_input
 
+
 def init_amps(amps, setting):
     for i, thruster in enumerate(setting):
-        while amps[i].run([thruster]) == 0:
+        data = [thruster]
+        while amps[i].run(data) == 0:
             pass
 
+
 def calculate_loop(program, setting):
-    amp_input = 0
     amps = [processor(program.copy()) for x in setting]
     init_amps(amps, setting)
 
-    while(True):
+    amp_input = 0
+    stop = False
+    while not stop:
         for i, thruster in enumerate(setting):
-            f = io.StringIO()
-
             ret = 0
+            f = io.StringIO()
             with redirect_stdout(f):
-                ret = amps[i].run([amp_input])
+                data = [amp_input]
                 while ret == 0:
-                    ret = amps[i].run([amp_input])
+                    ret = amps[i].run(data)
 
+            # Store output as next input
             amp_input = int(f.getvalue())
-            print("Out: {}".format(amp_input))
 
             if ret == 99:
-                return amp_input
+                stop = True
 
     return amp_input
+
 
 if __name__ == "__main__":
     with open(FILE) as file:
         program = [int(x) for x in file.read()[:-1].split(",")]
         print(program)
 
+    solutions = []
+    for setting in itertools.permutations([0, 1, 2, 3, 4]):
+        out = calculate_out(program, setting)
+        solutions.append(out)
+    print("Solution 1: {}".format(max(solutions)))
 
-#    solutions = []
-#    for setting in itertools.permutations([0, 1, 2, 3, 4]):
-#        out = calculate_out(program, setting)
-#        solutions.append(out)
-#
-#    print("Solution 1: {}".format(max(solutions)))
-
-    calculate_loop(program, [5, 6, 7, 8, 9])
+    solutions = []
+    for setting in itertools.permutations([5, 6, 7, 8, 9]):
+        out = calculate_loop(program, setting)
+        solutions.append(out)
+    print("Solution 2: {}".format(max(solutions)))

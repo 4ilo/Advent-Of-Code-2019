@@ -23,7 +23,6 @@ class processor:
             ret = self.inp(modes, data)
             if ret == -1:
                 self.ip -= 1
-                print("Waiting")
                 return ret
             self.ip += 1
 
