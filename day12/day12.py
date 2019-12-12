@@ -1,14 +1,15 @@
 #!/usr/bin/python3
 
 import re
-import copy
 import itertools
-from collections import defaultdict
+from math import gcd
 
+steps = 1000
 FILE = "example.txt"
-#FILE = "input.txt"
+FILE = "input.txt"
 
 regexp = "<x=(-?\d+), y=(-?\d+), z=(-?\d+)>"
+
 
 class Moon:
     def __init__(self, position):
@@ -27,20 +28,9 @@ class Moon:
                 moon2.vel[axis] -= 1
                 self.vel[axis] += 1
 
-    def apply_gravity2(self, moon2, axis):
-        if self.pos[axis] > moon2.pos[axis]:
-            moon2.vel[axis] += 1
-            self.vel[axis] -= 1
-        elif self.pos[axis] < moon2.pos[axis]:
-            moon2.vel[axis] -= 1
-            self.vel[axis] += 1
-
     def update_pos(self):
         for axis in range(3):
             self.pos[axis] += self.vel[axis]
-
-    def update_pos2(self, axis):
-        self.pos[axis] += self.vel[axis]
 
     def energy(self):
         pot = 0
@@ -51,16 +41,15 @@ class Moon:
 
         return pot, kin
 
-def print_moons(moons):
-    for moon in moons:
-        print(moon)
 
 def step(moons):
+    """ Move all moons 1 step"""
     for moon1, moon2 in itertools.combinations(moons, 2):
         moon1.apply_gravity(moon2)
 
     for moon in moons:
         moon.update_pos()
+
 
 def calc_energy(moons):
     total_energy = 0
@@ -70,35 +59,22 @@ def calc_energy(moons):
 
     return total_energy
 
-def serialise(moons):
-    datas = []
-    for moon in moons:
-        data = tuple(moon.pos + moon.vel)
-        datas.append(data)
 
-    return tuple(datas)
-
-
-def repitition_len(moons, axis):
-    initial = tuple([x.pos[axis] for x in moons] + [0 for x in moons])
-    print(initial)
+def repetition_len(moons, axis):
     counter = 0
+    initial = tuple([x.pos[axis] for x in moons] + [x.vel[axis] for x in moons])
 
     while True:
-        for moon1, moon2 in itertools.combinations(moons, 2):
-            moon1.apply_gravity2(moon2, axis)
-
-        for moon in moons:
-            moon.update_pos2(axis)
-
-        pos = tuple([x.pos[axis] for x in moons] + [0 for x in moons])
-        if pos == initial:
-            print(counter)
-            #return counter
-
         counter += 1
 
-def read_inp():
+        step(moons)
+        pos = tuple([x.pos[axis] for x in moons] + [x.vel[axis] for x in moons])
+
+        if pos == initial:
+            return counter
+
+
+def read_input():
     moons = []
     with open(FILE) as file:
         data = file.read().splitlines()
@@ -110,17 +86,32 @@ def read_inp():
 
     return moons
 
-if __name__ == "__main__":
-    moons = read_inp()
 
-    steps = 10
+def least_common_multiple(lengths):
+    lcm = lengths[0]
+
+    for i in lengths[1:]:
+        lcm = lcm * i // gcd(lcm, i)
+
+    return lcm
+
+
+if __name__ == "__main__":
+    moons = read_input()
+
+    # Part 1
     for i in range(steps):
         step(moons)
+
     energy = calc_energy(moons)
     print("Result 1: {}".format(energy))
 
-    for x in range(3):
-        moons = read_inp()
-        test = repitition_len(moons, x)
-        print(test)
+    # Part 2
+    lengths = []
+    for axis in range(3):
+        moons = read_input()
+        lengths.append(repetition_len(moons, axis))
+
+    print("Solution2: {}".format(least_common_multiple(lengths)))
+
 
