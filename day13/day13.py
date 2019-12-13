@@ -5,18 +5,21 @@ from collections import defaultdict
 from processor import processor
 from contextlib import redirect_stdout
 
+field = defaultdict(lambda: 0)
+
+INTERACTIVE = False
+
+
 def render_field(data):
-    field = defaultdict(lambda: 0)
     for tile in data:
         if tile[0] == -1 and tile[1] == 0:
-            print("score: {}".format(tile[2]))
+            score = tile[2]
+            print("score: {}".format(score))
         else:
             field.update({(tile[0], tile[1]): tile[2]})
 
-    print(field)
     maxx = max(field)[0] + 1
     maxy = max(field, key=lambda i:i[1])[1] + 1
-    print(maxx, maxy)
 
     for y in range(maxy):
         for x in range(maxx):
@@ -34,11 +37,19 @@ def render_field(data):
 
         print("")
 
+
+def get_result(data):
+    for tile in data:
+        if tile[0] == -1 and tile[1] == 0:
+            return tile[2]
+
+
 if __name__ == "__main__":
     with open("input.txt") as file:
         program = [int(x) for x in file.read().split(",")]
-        #print(program)
+        # print(program)
 
+    # Part 1
     ret = 0
     cpu = processor(program.copy(), 10000)
     f = io.StringIO()
@@ -51,24 +62,31 @@ if __name__ == "__main__":
     blocks = list(filter(lambda x: x[2] == 2, data))
     print("Result 1: {}".format(len(blocks)))
 
-
     # Part 2
-    ret = 0
     program[0] = 2
+    if not INTERACTIVE:
+        program[1744:1744 + 46] = [3] * 46          # Change puzzle input with a solid wall at the bottom of the field
+
     cpu = processor(program, 10000)
+    inp = []
     while True:
-        data = []
         f = io.StringIO()
+        ret = 0
         with redirect_stdout(f):
             while ret == 0:
-                ret = cpu.run(data)
+                ret = cpu.run(inp)
 
         data = [int(x) for x in f.getvalue().split("\n")[:-1]]
         data = [data[i:i+3] for i in range(0, len(data), 3)]
-        render_field(data)
-        #print(data)
+        if INTERACTIVE:
+            render_field(data)
 
         if ret == -1:
-            data = [int(input("Joystick: "))]
+            if INTERACTIVE:
+                inp = [int(input("Joystick: "))]
+            else:
+                inp = [0]
 
-    print(ret)
+        if ret == 99:
+            print("Result 2: {}".format(get_result(data)))
+            exit()
